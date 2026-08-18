@@ -19,12 +19,20 @@ ever runs. Fewer than half of the deployments from that template come up.
 Railway has a step for exactly this. `railway.json` here declares:
 
 ```json
-"preDeployCommand": "npm run migrate"
+"preDeployCommand": "./predeploy.sh"
 ```
 
 which runs after the build and before the new version takes traffic, when
 `DATABASE_URL` is available. Migrations apply on every deploy; a failed migration
 stops the rollout instead of shipping code against the wrong schema.
+
+`predeploy.sh` runs `prisma migrate deploy` and waits out one specific failure.
+On the first deploy of a project the API and Postgres start together, so the
+migration can arrive before the database accepts connections. Railway never
+retries a failed pre-deploy command, so that race alone marks the whole
+deployment failed. Prisma reports it as `P1001`, and only `P1001` is retried —
+for up to a minute. Every other migration error still stops the deploy on the
+first attempt.
 
 ## What's in here
 
@@ -34,6 +42,7 @@ stops the rollout instead of shipping code against the wrong schema.
 | `prisma/schema.prisma` | One `Note` model, enough to prove the database works |
 | `prisma.config.ts` | Prisma 7 reads the connection URL from here, not from the schema |
 | `railway.json` | Pre-deploy migration, health check, restart policy |
+| `predeploy.sh` | Runs the migration, retrying only while Postgres is still unreachable |
 | `package-lock.json` | Committed, so `npm ci` reproduces an audited tree |
 
 Two details worth knowing if you extend it:
