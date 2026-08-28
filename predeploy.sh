@@ -10,7 +10,7 @@
 # error without changing it.
 set -e
 
-max_attempts=12
+max_attempts=24
 delay=5
 attempt=1
 

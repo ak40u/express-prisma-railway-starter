@@ -31,8 +31,8 @@ On the first deploy of a project the API and Postgres start together, so the
 migration can arrive before the database accepts connections. Railway never
 retries a failed pre-deploy command, so that race alone marks the whole
 deployment failed. Prisma reports it as `P1001`, and only `P1001` is retried —
-for up to a minute. Every other migration error still stops the deploy on the
-first attempt.
+for up to two minutes, which is enough for a first boot of Postgres on a shared
+CPU. Every other migration error still stops the deploy on the first attempt.
 
 ## What's in here
 
@@ -44,6 +44,7 @@ first attempt.
 | `railway.json` | Pre-deploy migration, health check, restart policy |
 | `predeploy.sh` | Runs the migration, retrying only while Postgres is still unreachable |
 | `package-lock.json` | Committed, so `npm ci` reproduces an audited tree |
+| `.node-version` | Pins Node, so a new major release upstream cannot change the build under you |
 
 Two details worth knowing if you extend it:
 
